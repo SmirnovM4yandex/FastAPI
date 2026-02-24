@@ -1,29 +1,61 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, HTTPException
+from typing import List
 
-from ..schemas.posts import PostRequestSchema, PostResponseSchema
+from ..models.blogicum_models import Post
+from ..schemas.blogicum_schemas import PostSchema
 
+router = APIRouter(prefix="/posts", tags=["Posts"])
 
-router = APIRouter()
-
-
-@router.get("/hello_world", status_code=status.HTTP_200_OK)
-async def get_hello_world() -> dict:
-    response = {"text": "Hello, World!"}
-
-    return response
+fake_posts_db: List[Post] = []
+post_counter = 1
 
 
-@router.post("/test_json", status_code=status.HTTP_201_CREATED, response_model=PostResponseSchema)
-async def test_json(post: PostRequestSchema) -> dict:
-    if len(post.text) < 3:
-        raise HTTPException(
-            detail="Длина поста должна быть не меньше 3 символов",
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-        )
+@router.get("/", response_model=List[PostSchema])
+def get_posts():
+    return fake_posts_db
 
-    response = {
-        "post_text": post.text,
-        "author_name": post.author.login
-    }
 
-    return PostResponseSchema.model_validate(obj=response)
+@router.get("/{post_id}", response_model=PostSchema)
+def get_post(post_id: int):
+    for post in fake_posts_db:
+        if post.id == post_id:
+            return post
+    raise HTTPException(status_code=404, detail="Post not found")
+
+
+@router.post("/", response_model=PostSchema, status_code=201)
+def create_post(data: PostSchema):
+    global post_counter
+    post = Post(**data.dict())
+    post.id = post_counter
+    post_counter += 1
+
+    fake_posts_db.append(post)
+    return post
+
+
+@router.put("/{post_id}", response_model=PostSchema)
+def update_post(post_id: int, data: PostSchema):
+    for post in fake_posts_db:
+        if post.id == post_id:
+            post.title = data.title
+            post.text = data.text
+            post.pub_date = data.pub_date
+            post.author_id = data.author_id
+            post.location_id = data.location_id
+            post.category_id = data.category_id
+            post.image = data.image
+            return post
+
+    raise HTTPException(status_code=404, detail="Post not found")
+
+
+@router.delete("/{post_id}", status_code=204)
+def delete_post(post_id: int):
+    global fake_posts_db
+    for post in fake_posts_db:
+        if post.id == post_id:
+            fake_posts_db = [p for p in fake_posts_db if p.id != post_id]
+            return
+
+    raise HTTPException(status_code=404, detail="Post not found")
