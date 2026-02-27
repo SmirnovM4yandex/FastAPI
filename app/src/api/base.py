@@ -1,3 +1,4 @@
+"""Маршрутизатор приложения."""
 from fastapi import APIRouter, HTTPException
 from typing import List
 
@@ -12,11 +13,13 @@ post_counter = 1
 
 @router.get("/", response_model=List[PostSchema])
 def get_posts():
+    """Возвращает все посты."""
     return fake_posts_db
 
 
 @router.get("/{post_id}", response_model=PostSchema)
 def get_post(post_id: int):
+    """Возвращает пост по id."""
     for post in fake_posts_db:
         if post.id == post_id:
             return post
@@ -25,8 +28,9 @@ def get_post(post_id: int):
 
 @router.post("/", response_model=PostSchema, status_code=201)
 def create_post(data: PostSchema):
+    """Создаёт пост."""
     global post_counter
-    post = Post(**data.dict())
+    post = Post(**data.model_dump())
     post.id = post_counter
     post_counter += 1
 
@@ -36,6 +40,7 @@ def create_post(data: PostSchema):
 
 @router.put("/{post_id}", response_model=PostSchema)
 def update_post(post_id: int, data: PostSchema):
+    """Обновление поста по id."""
     for post in fake_posts_db:
         if post.id == post_id:
             post.title = data.title
@@ -52,6 +57,7 @@ def update_post(post_id: int, data: PostSchema):
 
 @router.delete("/{post_id}", status_code=204)
 def delete_post(post_id: int):
+    """Удаление конкретного поста."""
     global fake_posts_db
     for post in fake_posts_db:
         if post.id == post_id:

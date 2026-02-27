@@ -1,3 +1,4 @@
+"""Главный файл программы для запуска."""
 import asyncio
 import uvicorn
 
@@ -7,6 +8,7 @@ app = create_app()
 
 
 async def run() -> None:
+    """Ассинхронная функция для запуска приложения."""
     config = uvicorn.Config(
         "main:app", host="127.0.0.1", port=8000, reload=False
     )
