@@ -50,3 +50,11 @@ class Comment(BaseModel):
         self.post_id = post_id
         self.author_id = author_id
         self.text = text
+
+class User(BaseModel):
+    def __init__(self, username, email, password, first_name, second_name):
+        self.username = username
+        self.email = email
+        self.password = password
+        self.first_name = first_name
+        self.second_name = second_name

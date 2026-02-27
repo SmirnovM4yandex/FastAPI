@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr, EmailStr
 from typing import Optional
 
 
@@ -27,3 +27,11 @@ class CommentSchema(BaseModel):
     post_id: int
     author_id: int
     text: str
+
+
+class User(BaseModel):
+    username: str
+    email: EmailStr
+    password: SecretStr
+    first_name: Optional[str] = None
+    second_name: Optional[str] = None
