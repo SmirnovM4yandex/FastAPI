@@ -42,9 +42,20 @@ class CommentSchema(BaseModel):
     text: str
 
 
+class UserCreateSchema(BaseModel):
+    """Класс создания пользователя."""
+
+    username: str
+    email: EmailStr
+    password: SecretStr
+    first_name: Optional[str] = None
+    second_name: Optional[str] = None
+
+
 class User(BaseModel):
     """Класс польователя."""
 
+    model_config = ConfigDict(from_attributes=True)
     username: str
     email: EmailStr
     password: SecretStr
