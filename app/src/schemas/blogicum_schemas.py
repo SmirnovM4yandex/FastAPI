@@ -1,25 +1,29 @@
+"""Представления моделей приложения."""
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, SecretStr, EmailStr
 from typing import Optional
 
 
 class CategorySchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Класс категорий."""
 
+    model_config = ConfigDict(from_attributes=True)
     title: str
     description: str
     slug: str
 
 
 class LocationSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Класс локации."""
 
+    model_config = ConfigDict(from_attributes=True)
     name: str
 
 
 class PostSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Класс поста."""
 
+    model_config = ConfigDict(from_attributes=True)
     title: str
     text: str
     pub_date: datetime
@@ -30,8 +34,19 @@ class PostSchema(BaseModel):
 
 
 class CommentSchema(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Класс комментария."""
 
+    model_config = ConfigDict(from_attributes=True)
     post_id: int
     author_id: int
     text: str
+
+
+class User(BaseModel):
+    """Класс польователя."""
+
+    username: str
+    email: EmailStr
+    password: SecretStr
+    first_name: Optional[str] = None
+    second_name: Optional[str] = None

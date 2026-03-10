@@ -1,3 +1,4 @@
+"""Маршрутизатор приложения."""
 from fastapi import APIRouter
 
 from .routers.posts import router as posts_router
