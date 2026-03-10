@@ -52,7 +52,7 @@ class UserCreateSchema(BaseModel):
     second_name: Optional[str] = None
 
 
-class User(BaseModel):
+class UserSchema(BaseModel):
     """Класс польователя."""
 
     model_config = ConfigDict(from_attributes=True)
