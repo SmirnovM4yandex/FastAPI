@@ -14,6 +14,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(base_router, prefix="/base", tags=["Blogicum FastAPI"])
+    app.include_router(base_router, prefix="/base")
 
     return app
