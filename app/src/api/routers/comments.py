@@ -20,7 +20,7 @@ async def get_comments(db: AsyncSession = Depends(get_db)):
 async def get_comment(comment_id: int, db: AsyncSession = Depends(get_db)):
     repo = CommentRepository(db)
 
-    comment = await repo.get_by_id(comment_id)
+    comment = await repo.get_by_post(comment_id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
 
