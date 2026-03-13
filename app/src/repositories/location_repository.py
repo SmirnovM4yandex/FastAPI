@@ -21,9 +21,11 @@ class LocationRepository:
 
     async def create(self, data: dict):
         location = Location(**data)
+
         self.db.add(location)
         await self.db.commit()
         await self.db.refresh(location)
+
         return location
 
     async def update(self, location_id: int, data: dict):
@@ -33,7 +35,8 @@ class LocationRepository:
             return None
 
         for key, value in data.items():
-            setattr(location, key, value)
+            if hasattr(location, key):
+                setattr(location, key, value)
 
         await self.db.commit()
         await self.db.refresh(location)

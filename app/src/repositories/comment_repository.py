@@ -27,9 +27,11 @@ class CommentRepository:
 
     async def create(self, data: dict):
         comment = Comment(**data)
+
         self.db.add(comment)
         await self.db.commit()
         await self.db.refresh(comment)
+
         return comment
 
     async def update(self, comment_id: int, data: dict):
@@ -39,7 +41,8 @@ class CommentRepository:
             return None
 
         for key, value in data.items():
-            setattr(comment, key, value)
+            if hasattr(comment, key):
+                setattr(comment, key, value)
 
         await self.db.commit()
         await self.db.refresh(comment)

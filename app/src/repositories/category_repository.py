@@ -21,9 +21,11 @@ class CategoryRepository:
 
     async def create(self, data: dict):
         category = Category(**data)
+
         self.db.add(category)
         await self.db.commit()
         await self.db.refresh(category)
+
         return category
 
     async def update(self, category_id: int, data: dict):
@@ -33,7 +35,8 @@ class CategoryRepository:
             return None
 
         for key, value in data.items():
-            setattr(category, key, value)
+            if hasattr(category, key):
+                setattr(category, key, value)
 
         await self.db.commit()
         await self.db.refresh(category)

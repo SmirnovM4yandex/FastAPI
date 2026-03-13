@@ -3,8 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
 from src.schemas.blogicum_schemas import CategorySchema
-from src.repositories.category_repository import CategoryRepository
 from src.dependencies.database import get_db
+from src.domain.category_service import CategoryService
 
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -12,15 +12,16 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 
 @router.get("/", response_model=List[CategorySchema])
 async def get_categories(db: AsyncSession = Depends(get_db)):
-    repo = CategoryRepository(db)
-    return await repo.get_all()
+    service = CategoryService(db)
+    return await service.get_categories()
 
 
 @router.get("/{category_id}", response_model=CategorySchema)
 async def get_category(category_id: int, db: AsyncSession = Depends(get_db)):
-    repo = CategoryRepository(db)
+    service = CategoryService(db)
 
-    category = await repo.get_by_id(category_id)
+    category = await service.get_category(category_id)
+
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
@@ -30,16 +31,17 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_db)):
 @router.post("/", response_model=CategorySchema, status_code=201)
 async def create_category(data: CategorySchema, db:
                           AsyncSession = Depends(get_db)):
-    repo = CategoryRepository(db)
-    return await repo.create(data.model_dump())
+    service = CategoryService(db)
+    return await service.create_category(data.model_dump())
 
 
 @router.put("/{category_id}", response_model=CategorySchema)
 async def update_category(category_id: int, data: CategorySchema, db:
                           AsyncSession = Depends(get_db)):
-    repo = CategoryRepository(db)
+    service = CategoryService(db)
 
-    category = await repo.update(category_id, data.model_dump())
+    category = await service.update_category(category_id, data.model_dump())
+
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
 
@@ -49,8 +51,10 @@ async def update_category(category_id: int, data: CategorySchema, db:
 @router.delete("/{category_id}", status_code=204)
 async def delete_category(category_id: int, db:
                           AsyncSession = Depends(get_db)):
-    repo = CategoryRepository(db)
+    service = CategoryService(db)
 
-    success = await repo.delete(category_id)
+    success = await service.delete_category(category_id)
+
     if not success:
-        raise HTTPException(status_code=404, detail="Category not found")
+        raise HTTPException(status_code=400,
+                            detail="Category cannot be deleted")
