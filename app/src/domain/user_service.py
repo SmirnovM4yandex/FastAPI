@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from fastapi import HTTPException
 
 from src.models.user_model import User
 from src.repositories.user_repository import UserRepository
@@ -24,14 +25,14 @@ class UserService:
         )
 
         if existing.scalar_one_or_none():
-            raise ValueError("Username already exists")
+            raise HTTPException(401, "Username already exists")
 
         existing_email = await self.db.execute(
             select(User).where(User.email == data["email"])
         )
 
         if existing_email.scalar_one_or_none():
-            raise ValueError("Email already exists")
+            raise HTTPException(401, "Email already exists")
 
         return await self.repo.create(data)
 

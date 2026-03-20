@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from fastapi import HTTPException
 
 from src.models.category_model import Category
 from src.repositories.category_repository import CategoryRepository
@@ -24,7 +25,10 @@ class CategoryService:
         )
 
         if existing.scalar_one_or_none():
-            raise ValueError("Category slug must be unique")
+            raise HTTPException(409, "Category slug must be unique")
+        
+        if len(data["slug"]) < 1:
+            raise HTTPException(411, "Category name empty")
 
         return await self.repo.create(data)
 

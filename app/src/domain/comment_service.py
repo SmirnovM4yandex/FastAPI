@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 
 from src.repositories.comment_repository import CommentRepository
 from src.repositories.post_repository import PostRepository
@@ -21,13 +22,13 @@ class CommentService:
     async def create_comment(self, data: dict):
 
         if not await self.post_repo.get_by_id(data["post_id"]):
-            raise ValueError("Post not found")
+            raise HTTPException(404, "Post not found")
 
         if not await self.user_repo.get_by_id(data["author_id"]):
-            raise ValueError("Author not found")
+            raise HTTPException(404, "Author not found")
 
         if len(data["text"]) < 1:
-            raise ValueError("Comment text empty")
+            raise HTTPException(411, "Comment text empty")
 
         return await self.repo.create(data)
 

@@ -1,4 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from fastapi import HTTPException
+
+from src.models.post_model import Post
 
 from src.repositories.post_repository import PostRepository
 from src.repositories.category_repository import CategoryRepository
@@ -13,6 +17,7 @@ class PostService:
         self.category_repo = CategoryRepository(db)
         self.location_repo = LocationRepository(db)
         self.user_repo = UserRepository(db)
+        self.db = db
 
     async def get_posts(self):
         return await self.repo.get_all()
@@ -23,18 +28,18 @@ class PostService:
     async def create_post(self, data: dict):
 
         if not await self.user_repo.get_by_id(data["author_id"]):
-            raise ValueError("Author not found")
+            raise HTTPException(404, "Author not found")
 
         if data.get("category_id"):
             if not await self.category_repo.get_by_id(data["category_id"]):
-                raise ValueError("Category not found")
+                raise HTTPException(404, "Category not found")
 
         if data.get("location_id"):
             if not await self.location_repo.get_by_id(data["location_id"]):
-                raise ValueError("Location not found")
+                raise HTTPException(404, "Location not found")
 
         if len(data["title"]) < 3:
-            raise ValueError("Title too short")
+            raise HTTPException(411, "Title too short")
 
         return await self.repo.create(data)
 
