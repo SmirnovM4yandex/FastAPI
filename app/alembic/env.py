@@ -5,6 +5,11 @@ from sqlalchemy import pool
 
 from alembic import context
 from src.database import Base
+from src.models.category_model import Category
+from src.models.comment_model import Comment
+from src.models.location_model import Location
+from src.models.post_model import Post
+from src.models.user_model import User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
