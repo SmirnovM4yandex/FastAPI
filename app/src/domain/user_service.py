@@ -1,43 +1,93 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from fastapi import HTTPException
 
-from src.models.user_model import User
 from src.repositories.user_repository import UserRepository
+from src.core.exceptions.exceptions import (
+    NotFoundException,
+    ConflictException,
+    ValidationException
+)
 
 
 class UserService:
 
     def __init__(self, db: AsyncSession):
-        self.db = db
         self.repo = UserRepository(db)
 
     async def get_users(self):
         return await self.repo.get_all()
 
     async def get_user(self, user_id: int):
-        return await self.repo.get_by_id(user_id)
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise NotFoundException(
+                "User not found",
+                {"user_id": user_id}
+            )
+
+        return user
 
     async def create_user(self, data: dict):
+        if await self.repo.get_by_username(data["username"]):
+            raise ConflictException(
+                "Username already exists",
+                {"username": data["username"]}
+            )
 
-        existing = await self.db.execute(
-            select(User).where(User.username == data["username"])
-        )
+        if await self.repo.get_by_email(data["email"]):
+            raise ConflictException(
+                "Email already exists",
+                {"email": data["email"]}
+            )
 
-        if existing.scalar_one_or_none():
-            raise HTTPException(401, "Username already exists")
+        if len(data["username"].strip()) < 3:
+            raise ValidationException("Username too short")
 
-        existing_email = await self.db.execute(
-            select(User).where(User.email == data["email"])
-        )
-
-        if existing_email.scalar_one_or_none():
-            raise HTTPException(401, "Email already exists")
+        if len(data["password"]) < 6:
+            raise ValidationException("Password too short")
 
         return await self.repo.create(data)
 
     async def update_user(self, user_id: int, data: dict):
+        user = await self.repo.get_by_id(user_id)
+
+        if not user:
+            raise NotFoundException(
+                "User not found",
+                {"user_id": user_id}
+            )
+
+        if "username" in data:
+            existing = await self.repo.get_by_username(data["username"])
+            if existing and existing.id != user_id:
+                raise ConflictException(
+                    "Username already exists",
+                    {"username": data["username"]}
+                )
+
+        if "email" in data:
+            existing = await self.repo.get_by_email(data["email"])
+            if existing and existing.id != user_id:
+                raise ConflictException(
+                    "Email already exists",
+                    {"email": data["email"]}
+                )
+
+        if "username" in data and len(data["username"].strip()) < 3:
+            raise ValidationException("Username too short")
+
+        if "password" in data and len(data["password"]) < 6:
+            raise ValidationException("Password too short")
+
         return await self.repo.update(user_id, data)
 
     async def delete_user(self, user_id: int):
-        return await self.repo.delete(user_id)
+        success = await self.repo.delete(user_id)
+
+        if not success:
+            raise NotFoundException(
+                "User not found",
+                {"user_id": user_id}
+            )
+
+        return True
