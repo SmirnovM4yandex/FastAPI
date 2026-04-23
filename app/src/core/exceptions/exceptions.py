@@ -49,3 +49,10 @@ class ValidationException(AppException):
         logger.warning(
             f"Validation error: {self.message} | {self.details}"
         )
+
+class WrongPasswordException(AppException):
+
+    def log(self):
+        logger.warning(
+            f"Wrong password: {self.message} | {self.details}"
+        )
