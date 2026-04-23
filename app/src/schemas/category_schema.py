@@ -12,7 +12,7 @@ class CategorySchema(BaseModel):
     description: str
     slug: str
     created_at: datetime
-    is_published: int
+    is_published: bool
 
     @field_validator("slug")
     @classmethod

@@ -1,5 +1,5 @@
-from datetime import datetime
-from pydantic import BaseModel, ConfigDict, SecretStr, EmailStr, field_validator
+from pydantic import (BaseModel, ConfigDict, SecretStr, EmailStr,
+                      field_validator)
 from typing import Optional
 import logging
 
@@ -11,6 +11,7 @@ class UserCreateSchema(BaseModel):
     password: SecretStr
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    is_superuser: bool = False
 
     @field_validator("username")
     @classmethod
@@ -39,6 +40,7 @@ class UserSchema(BaseModel):
     email: Optional[EmailStr] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    is_superuser: bool
 
     @field_validator("email", mode="before")
     @classmethod

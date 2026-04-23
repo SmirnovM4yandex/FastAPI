@@ -56,7 +56,7 @@ class UserRepository:
                 last_name=data.get("last_name") or "",
                 date_joined=now,
                 last_login=None,
-                is_superuser=False,
+                is_superuser=data.get("is_superuser", False),
                 is_staff=False,
                 is_active=True
             )

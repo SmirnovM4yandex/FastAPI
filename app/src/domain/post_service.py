@@ -7,7 +7,8 @@ from src.repositories.user_repository import UserRepository
 
 from src.core.exceptions.exceptions import (
     NotFoundException,
-    ValidationException
+    ValidationException,
+    ConflictException
 )
 
 
@@ -26,84 +27,44 @@ class PostService:
         post = await self.repo.get_by_id(post_id)
 
         if not post:
-            raise NotFoundException(
-                "Post not found",
-                {"post_id": post_id}
-            )
+            raise NotFoundException("Post not found", {"post_id": post_id})
 
         return post
 
-    async def create_post(self, data: dict):
-        if not await self.user_repo.get_by_id(data["author_id"]):
-            raise NotFoundException(
-                "Author not found",
-                {"author_id": data["author_id"]}
-            )
+    async def create_post(self, data: dict, current_user):
+        data["author_id"] = current_user.id
 
-        if data.get("category_id") is not None:
+        if data.get("category_id"):
             if not await self.category_repo.get_by_id(data["category_id"]):
-                raise NotFoundException(
-                    "Category not found",
-                    {"category_id": data["category_id"]}
-                )
+                raise NotFoundException("Category not found")
 
-        if data.get("location_id") is not None:
+        if data.get("location_id"):
             if not await self.location_repo.get_by_id(data["location_id"]):
-                raise NotFoundException(
-                    "Location not found",
-                    {"location_id": data["location_id"]}
-                )
+                raise NotFoundException("Location not found")
 
         if not data["title"] or len(data["title"].strip()) < 3:
-            raise ValidationException(
-                "Title must be at least 3 characters"
-            )
+            raise ValidationException("Title must be at least 3 characters")
 
         return await self.repo.create(data)
 
-    async def update_post(self, post_id: int, data: dict):
-        if not await self.user_repo.get_by_id(data["author_id"]):
-            raise NotFoundException(
-                "Author not found",
-                {"author_id": data["author_id"]}
-            )
-
-        if data.get("category_id") is not None:
-            if not await self.category_repo.get_by_id(data["category_id"]):
-                raise NotFoundException(
-                    "Category not found",
-                    {"category_id": data["category_id"]}
-                )
-
-        if data.get("location_id") is not None:
-            if not await self.location_repo.get_by_id(data["location_id"]):
-                raise NotFoundException(
-                    "Location not found",
-                    {"location_id": data["location_id"]}
-                )
-
-        if not data["title"] or len(data["title"].strip()) < 3:
-            raise ValidationException(
-                "Title must be at least 3 characters"
-            )
-
-        post = await self.repo.update(post_id, data)
+    async def update_post(self, post_id: int, data: dict, current_user):
+        post = await self.repo.get_by_id(post_id)
 
         if not post:
-            raise NotFoundException(
-                "Post not found",
-                {"post_id": post_id}
-            )
+            raise NotFoundException("Post not found", {"post_id": post_id})
 
-        return post
+        if post.author_id != current_user.id and not current_user.is_superuser:
+            raise ConflictException("No permission to update this post")
 
-    async def delete_post(self, post_id: int):
-        success = await self.repo.delete(post_id)
+        return await self.repo.update(post_id, data)
 
-        if not success:
-            raise NotFoundException(
-                "Post not found",
-                {"post_id": post_id}
-            )
+    async def delete_post(self, post_id: int, current_user):
+        post = await self.repo.get_by_id(post_id)
 
-        return True
+        if not post:
+            raise NotFoundException("Post not found", {"post_id": post_id})
+
+        if post.author_id != current_user.id and not current_user.is_superuser:
+            raise ConflictException("No permission to delete this post")
+
+        return await self.repo.delete(post_id)

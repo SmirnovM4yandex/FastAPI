@@ -7,7 +7,6 @@ from src.core.exceptions.exceptions import (
     ValidationException
 )
 from src.resources.auth import get_password_hash
-from ..schemas.user_schemas import UserSchema
 
 
 class UserService:
@@ -22,13 +21,10 @@ class UserService:
         user = await self.repo.get_by_id(user_id)
 
         if not user:
-            raise NotFoundException(
-                "User not found",
-                {"user_id": user_id}
-            )
+            raise NotFoundException("User not found", {"user_id": user_id})
 
         return user
-    
+
     async def get_user_by_login(self, login: str):
         user = await self.repo.get_by_username(login)
 
@@ -39,16 +35,10 @@ class UserService:
 
     async def create_user(self, data: dict):
         if await self.repo.get_by_username(data["username"]):
-            raise ConflictException(
-                "Username already exists",
-                {"username": data["username"]}
-            )
+            raise ConflictException("Username already exists")
 
         if await self.repo.get_by_email(data["email"]):
-            raise ConflictException(
-                "Email already exists",
-                {"email": data["email"]}
-            )
+            raise ConflictException("Email already exists")
 
         if len(data["username"].strip()) < 3:
             raise ValidationException("Username too short")
@@ -56,52 +46,43 @@ class UserService:
         if len(data["password"]) < 6:
             raise ValidationException("Password too short")
 
-        if data["password"].startswith("$2b$"):
-            raise Exception("Password is already hashed")
-
         data["password"] = get_password_hash(data["password"])
+        data["is_superuser"] = data.get("is_superuser", False)
         return await self.repo.create(data)
 
-    async def update_user(self, user_id: int, data: dict):
+    async def update_user(self, user_id: int, data: dict, current_user):
         user = await self.repo.get_by_id(user_id)
 
         if not user:
-            raise NotFoundException(
-                "User not found",
-                {"user_id": user_id}
-            )
+            raise NotFoundException("User not found")
+
+        if user.id != current_user.id and not current_user.is_superuser:
+            raise ConflictException("No permission to update this user")
 
         if "username" in data:
             existing = await self.repo.get_by_username(data["username"])
             if existing and existing.id != user_id:
-                raise ConflictException(
-                    "Username already exists",
-                    {"username": data["username"]}
-                )
+                raise ConflictException("Username already exists")
 
         if "email" in data:
             existing = await self.repo.get_by_email(data["email"])
             if existing and existing.id != user_id:
-                raise ConflictException(
-                    "Email already exists",
-                    {"email": data["email"]}
-                )
+                raise ConflictException("Email already exists")
 
-        if "username" in data and len(data["username"].strip()) < 3:
-            raise ValidationException("Username too short")
-
-        if "password" in data and len(data["password"]) < 6:
-            raise ValidationException("Password too short")
+        if "password" in data:
+            if len(data["password"]) < 6:
+                raise ValidationException("Password too short")
+            data["password"] = get_password_hash(data["password"])
 
         return await self.repo.update(user_id, data)
 
-    async def delete_user(self, user_id: int):
-        success = await self.repo.delete(user_id)
+    async def delete_user(self, user_id: int, current_user):
+        user = await self.repo.get_by_id(user_id)
 
-        if not success:
-            raise NotFoundException(
-                "User not found",
-                {"user_id": user_id}
-            )
+        if not user:
+            raise NotFoundException("User not found")
 
-        return True
+        if user.id != current_user.id and not current_user.is_superuser:
+            raise ConflictException("No permission to delete this user")
+
+        return await self.repo.delete(user_id)

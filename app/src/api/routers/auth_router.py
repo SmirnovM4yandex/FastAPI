@@ -10,7 +10,9 @@ from src.api.depends import (
     authenticate_user_use_case,
     create_access_token_use_case,
 )
-from src.core.exceptions.exceptions import NotFoundException, WrongPasswordException
+from src.core.exceptions.exceptions import (NotFoundException,
+                                            WrongPasswordException)
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
