@@ -35,9 +35,8 @@ async def create_comment(
 ):
     try:
         payload = data.model_dump()
-        payload["author_id"] = current_user.id
 
-        return await CommentService(db).create_comment(payload)
+        return await CommentService(db).create_comment(payload, current_user)
     except Exception as ex:
         handle_exception(ex)
 

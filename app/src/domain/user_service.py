@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.repositories.user_repository import UserRepository
+from src.repositories.post_repository import PostRepository
+from src.repositories.comment_repository import CommentRepository
 from src.core.exceptions.exceptions import (
     NotFoundException,
     ConflictException,
@@ -13,6 +15,8 @@ class UserService:
 
     def __init__(self, db: AsyncSession):
         self.repo = UserRepository(db)
+        self.post_repo = PostRepository(db)
+        self.comment_repo = CommentRepository(db)
 
     async def get_users(self):
         return await self.repo.get_all()
@@ -84,5 +88,19 @@ class UserService:
 
         if user.id != current_user.id and not current_user.is_superuser:
             raise ConflictException("No permission to delete this user")
+
+        comments = await self.comment_repo.get_all()
+        for comment in comments:
+            if comment.author_id == user_id:
+                await self.comment_repo.delete(comment.id)
+
+        posts = await self.post_repo.get_all()
+        for post in posts:
+            if post.author_id == user_id:
+                post_comments = await self.comment_repo.get_all()
+                for comment in post_comments:
+                    if comment.post_id == post.id:
+                        await self.comment_repo.delete(comment.id)
+                await self.post_repo.delete(post.id)
 
         return await self.repo.delete(user_id)
