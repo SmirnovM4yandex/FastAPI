@@ -7,9 +7,13 @@ class Category(Base):
     __tablename__ = "blog_category"
 
     id = Column(Integer, primary_key=True)
-    title = Column(String(256))
-    description = Column(Text)
-    slug = Column(String(50), unique=True)
 
-    is_published = Column(Boolean)
-    created_at = Column(DateTime)
+    title = Column(String(256), nullable=False)
+
+    description = Column(Text, nullable=True)
+
+    slug = Column(String(50), unique=True, nullable=False)
+
+    is_published = Column(Boolean, nullable=False, default=True)
+
+    created_at = Column(DateTime, nullable=False)

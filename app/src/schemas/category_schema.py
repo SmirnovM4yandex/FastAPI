@@ -1,18 +1,16 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, field_validator
 import logging
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 logger = logging.getLogger(__name__)
 
-class CategorySchema(BaseModel):
-    """Класс категорий."""
 
-    model_config = ConfigDict(from_attributes=True)
+class CategoryBaseSchema(BaseModel):
     title: str
     description: str
     slug: str
-    created_at: datetime
-    is_published: bool
+    is_published: bool = True
 
     @field_validator("slug")
     @classmethod
@@ -20,5 +18,15 @@ class CategorySchema(BaseModel):
         if not v or len(v.strip()) == 0:
             logger.error("Validation failed for slug: empty value")
             raise ValueError("Slug cannot be empty")
-        logger.info("Validated slug: %s", v)
         return v
+
+
+class CategoryCreateSchema(CategoryBaseSchema):
+    pass
+
+
+class CategoryResponseSchema(CategoryBaseSchema):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime

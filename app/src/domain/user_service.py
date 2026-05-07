@@ -46,11 +46,16 @@ class UserService:
 
         if len(data["username"].strip()) < 3:
             raise ValidationException("Username too short")
+        
+        password = data["password"]
 
-        if len(data["password"]) < 6:
+        if hasattr(password, "get_secret_value"):
+            password = password.get_secret_value()
+
+        if len(password) < 6:
             raise ValidationException("Password too short")
 
-        data["password"] = get_password_hash(data["password"])
+        data["password"] = get_password_hash(password)
         data["is_superuser"] = data.get("is_superuser", False)
         return await self.repo.create(data)
 
@@ -74,9 +79,15 @@ class UserService:
                 raise ConflictException("Email already exists")
 
         if "password" in data:
-            if len(data["password"]) < 6:
+            password = data["password"]
+
+            if hasattr(password, "get_secret_value"):
+                password = password.get_secret_value()
+
+            if len(password) < 6:
                 raise ValidationException("Password too short")
-            data["password"] = get_password_hash(data["password"])
+
+            data["password"] = get_password_hash(password)
 
         return await self.repo.update(user_id, data)
 
@@ -89,18 +100,12 @@ class UserService:
         if user.id != current_user.id and not current_user.is_superuser:
             raise ConflictException("No permission to delete this user")
 
-        comments = await self.comment_repo.get_all()
+        comments = await self.comment_repo.get_by_author(user.id)
         for comment in comments:
-            if comment.author_id == user_id:
-                await self.comment_repo.delete(comment.id)
+            await self.comment_repo.delete(comment.id)
 
-        posts = await self.post_repo.get_all()
+        posts = await self.post_repo.get_by_author(user.id)
         for post in posts:
-            if post.author_id == user_id:
-                post_comments = await self.comment_repo.get_all()
-                for comment in post_comments:
-                    if comment.post_id == post.id:
-                        await self.comment_repo.delete(comment.id)
-                await self.post_repo.delete(post.id)
+            await self.post_repo.delete(post.id)
 
         return await self.repo.delete(user_id)

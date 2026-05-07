@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
 
 from src.database import Base
+from src.core.settings import settings
 
 
 class Comment(Base):
@@ -8,9 +9,24 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True)
 
-    post_id = Column(Integer, ForeignKey("blog_post.id"))
-    author_id = Column(Integer, ForeignKey("auth_user.id"))
+    post_id = Column(
+        Integer,
+        ForeignKey(
+            f"{settings.POSTGRES_SCHEMA}.blog_post.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False
+    )
 
-    text = Column(Text)
+    author_id = Column(
+        Integer,
+        ForeignKey(
+            f"{settings.POSTGRES_SCHEMA}.auth_user.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False
+    )
 
-    created_at = Column(DateTime)
+    text = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, nullable=False)

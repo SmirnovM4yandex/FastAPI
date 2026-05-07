@@ -1,6 +1,6 @@
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
-from src.resources.field_description import ACCESS_TOKEN, TOKEN_TYPE, USERNAME
+from src.resources.field_description import ACCESS_TOKEN, TOKEN_TYPE
 
 
 class Token(BaseModel):

@@ -12,7 +12,7 @@ class CreateAccessTokenUseCase:
     async def execute(self, login: str) -> str:
         payload = {
             "sub": login,
-            "exp": datetime.now() + timedelta(minutes=EXPIRE_MINUTES)
+            "exp": datetime.utcnow() + timedelta(minutes=EXPIRE_MINUTES)
         }
 
         return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)

@@ -1,7 +1,15 @@
-from sqlalchemy import (Column, Integer, String, Text, DateTime,
-                        Boolean, ForeignKey)
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    Boolean,
+    ForeignKey,
+)
 
 from src.database import Base
+from src.core.settings import settings
 
 
 class Post(Base):
@@ -9,18 +17,34 @@ class Post(Base):
 
     id = Column(Integer, primary_key=True)
 
-    title = Column(String(256))
-    text = Column(Text)
-    pub_date = Column(DateTime)
+    title = Column(String(256), nullable=False)
+    text = Column(Text, nullable=False)
 
-    author_id = Column(Integer, ForeignKey("auth_user.id"))
+    pub_date = Column(DateTime, nullable=True)
 
-    location_id = Column(Integer, ForeignKey("blog_location.id"),
-                         nullable=True)
-    category_id = Column(Integer, ForeignKey("blog_category.id"),
-                         nullable=True)
+    author_id = Column(
+        Integer,
+        ForeignKey(
+            f"{settings.POSTGRES_SCHEMA}.auth_user.id",
+            ondelete="CASCADE"
+        ),
+        nullable=False
+    )
+
+    location_id = Column(
+        Integer,
+        ForeignKey(f"{settings.POSTGRES_SCHEMA}.blog_location.id"),
+        nullable=True
+    )
+
+    category_id = Column(
+        Integer,
+        ForeignKey(f"{settings.POSTGRES_SCHEMA}.blog_category.id"),
+        nullable=True
+    )
 
     image = Column(String, nullable=True)
 
-    is_published = Column(Boolean)
-    created_at = Column(DateTime)
+    is_published = Column(Boolean, nullable=False, default=True)
+
+    created_at = Column(DateTime, nullable=False)
