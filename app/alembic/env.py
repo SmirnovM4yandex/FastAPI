@@ -10,10 +10,12 @@ from src.models.comment_model import Comment
 from src.models.location_model import Location
 from src.models.post_model import Post
 from src.models.user_model import User
+# from src.core.settings import settings
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+# config.set_main_option("sqlalchemy.url", settings.DB_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

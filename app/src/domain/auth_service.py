@@ -8,9 +8,10 @@ from src.dependencies.database import get_db
 from src.repositories.user_repository import UserRepository
 from src.resources.auth import oauth2_scheme
 from src.core.exceptions.auth_exceptions import CredentialsException
+from src.core.settings import settings
 
-SECRET_KEY = "STRONG_SECRET_KEY"
-ALGORITHM = "HS256"
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
 
 
 class AuthService:
