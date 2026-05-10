@@ -39,7 +39,7 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    entrypoint: sh -c "./src/start.sh"
+    entrypoint: ["sh", "/app/start.sh"]
 
 networks:
   app_network:
