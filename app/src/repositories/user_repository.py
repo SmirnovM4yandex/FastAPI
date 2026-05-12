@@ -1,5 +1,5 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -18,11 +18,8 @@ class UserRepository:
 
     async def get_all(self):
         try:
-            result = await self.db.execute(
-                select(User).order_by(User.id)
-            )
+            result = await self.db.execute(select(User).order_by(User.id))
             return result.scalars().all()
-
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch users: %s", ex)
             raise DatabaseException(str(ex))
@@ -33,7 +30,6 @@ class UserRepository:
                 select(User).where(User.id == user_id)
             )
             return result.scalar_one_or_none()
-
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch user id=%s: %s", user_id, ex)
             raise DatabaseException(str(ex))
@@ -44,7 +40,6 @@ class UserRepository:
                 select(User).where(User.username == username)
             )
             return result.scalar_one_or_none()
-
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch user username=%s: %s", username, ex)
             raise DatabaseException(str(ex))
@@ -55,7 +50,6 @@ class UserRepository:
                 select(User).where(User.email == email)
             )
             return result.scalar_one_or_none()
-
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch user email=%s: %s", email, ex)
             raise DatabaseException(str(ex))
@@ -76,11 +70,8 @@ class UserRepository:
             )
 
             self.db.add(user)
-
             await self.db.flush()
             await self.db.refresh(user)
-
-            logger.info("Created user id=%s", user.id)
 
             return user
 
@@ -91,7 +82,6 @@ class UserRepository:
     async def update(self, user_id: int, data: dict):
         try:
             user = await self.get_by_id(user_id)
-
             if not user:
                 return None
 
@@ -102,8 +92,6 @@ class UserRepository:
             await self.db.flush()
             await self.db.refresh(user)
 
-            logger.info("Updated user id=%s", user_id)
-
             return user
 
         except SQLAlchemyError as ex:
@@ -113,13 +101,10 @@ class UserRepository:
     async def delete(self, user_id: int):
         try:
             user = await self.get_by_id(user_id)
-
             if not user:
                 return False
 
             await self.db.delete(user)
-
-            logger.info("Deleted user id=%s", user_id)
 
             return True
 

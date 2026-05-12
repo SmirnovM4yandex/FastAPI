@@ -15,6 +15,7 @@ from src.domain.category_service import CategoryService
 from src.schemas.category_schema import (
     CategoryCreateSchema,
     CategoryResponseSchema,
+    CategoryUpdateSchema
 )
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -43,22 +44,20 @@ async def get_category(category_id: int, db: AsyncSession = Depends(get_db)):
 )
 async def create_category(
     data: CategoryCreateSchema,
-    current_user=Depends(AuthService.get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     try:
         return await CategoryService(db).create_category(
-            data.model_dump(),
-            current_user,
+            data.model_dump()
         )
 
-    except ValidationException as exc:
-        exc.log()
-        raise HTTPException(status_code=400, detail=exc.message)
+    except ValidationException as ex:
+        ex.log()
+        raise HTTPException(status_code=400, detail=ex.message)
 
-    except ConflictException as exc:
-        exc.log()
-        raise HTTPException(status_code=409, detail=exc.message)
+    except ConflictException as ex:
+        ex.log()
+        raise HTTPException(status_code=409, detail=ex.message)
 
     except Exception as ex:
         handle_exception(ex)
@@ -67,24 +66,41 @@ async def create_category(
 @router.put("/{category_id}", response_model=CategoryResponseSchema)
 async def update_category(
     category_id: int,
-    data: CategoryCreateSchema,
+    data: CategoryUpdateSchema,
     current_user=Depends(AuthService.get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     try:
         return await CategoryService(db).update_category(
             category_id,
-            data.model_dump(),
+            data.model_dump(exclude_unset=True),
             current_user,
         )
 
-    except NotFoundException as exc:
-        exc.log()
-        raise HTTPException(status_code=404, detail=exc.message)
+    except NotFoundException as ex:
+        ex.log()
+        raise HTTPException(status_code=404, detail=ex.message)
 
-    except ConflictException as exc:
-        exc.log()
-        raise HTTPException(status_code=403, detail=exc.message)
+    except ConflictException as ex:
+        ex.log()
+        raise HTTPException(status_code=403, detail=ex.message)
 
+    except Exception as ex:
+        handle_exception(ex)
+
+@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_category(
+    category_id: int,
+    current_user = Depends(AuthService.get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    try:
+        await CategoryService(db).delete_category(category_id, current_user)
+    except NotFoundException as ex:
+        ex.log()
+        raise HTTPException(status_code=404, detail=ex.message)
+    except ConflictException as ex:
+        ex.log()
+        raise HTTPException(status_code=403, detail=ex.message)
     except Exception as ex:
         handle_exception(ex)

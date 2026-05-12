@@ -28,12 +28,17 @@ class CommentService:
         return comment
 
     async def create_comment(self, data: dict, current_user):
-        post = await self.post_repo.get_by_id(data["post_id"])
+        post_id = data.get("post_id")
+        text = data.get("text")
 
+        if not post_id:
+            raise ValidationException("post_id is required")
+        
+        post = await self.post_repo.get_by_id(post_id)
         if not post:
             raise NotFoundException("Post not found")
 
-        if not data["text"] or len(data["text"].strip()) == 0:
+        if not text or text.strip():
             raise ValidationException("Comment text cannot be empty")
 
         data["author_id"] = current_user.id

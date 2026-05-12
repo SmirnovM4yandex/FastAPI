@@ -10,6 +10,7 @@ from src.domain.comment_service import CommentService
 from src.schemas.comment_schema import (
     CommentCreateSchema,
     CommentResponseSchema,
+    CommentUpdateSchema
 )
 
 router = APIRouter(prefix="/comments", tags=["Comments"])
@@ -54,7 +55,7 @@ async def create_comment(
 @router.put("/{comment_id}", response_model=CommentResponseSchema)
 async def update_comment(
     comment_id: int,
-    data: CommentCreateSchema,
+    data: CommentUpdateSchema,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(AuthService.get_current_user),
 ):
@@ -62,7 +63,7 @@ async def update_comment(
         return await CommentService(db).update_comment(
             comment_id,
             data.model_dump(),
-            current_user=current_user,
+            current_user,
         )
 
     except Exception as ex:

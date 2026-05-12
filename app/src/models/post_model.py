@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Boolean,
     ForeignKey,
+    func
 )
 
 from src.database import Base
@@ -47,4 +48,4 @@ class Post(Base):
 
     is_published = Column(Boolean, nullable=False, default=True)
 
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

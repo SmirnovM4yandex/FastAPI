@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 import logging
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -12,15 +13,28 @@ class LocationBaseSchema(BaseModel):
 
     @field_validator("name")
     @classmethod
-    def validate_name(cls, v):
-        if not v or len(v.strip()) == 0:
+    def validate_name(cls, v: str):
+        if not v or not v.strip():
             logger.error("Validation failed for location name")
             raise ValueError("Location name cannot be empty")
-        return v
+        return v.strip()
 
 
 class LocationCreateSchema(LocationBaseSchema):
     pass
+
+
+class LocationUpdateSchema(BaseModel):
+    name: Optional[str] = None
+    is_published: Optional[bool] = None
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v):
+        if v is not None and not v.strip():
+            logger.error("Validation failed for location name")
+            raise ValueError("Location name cannot be empty")
+        return v.strip() if v else v
 
 
 class LocationResponseSchema(LocationBaseSchema):

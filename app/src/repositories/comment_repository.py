@@ -64,13 +64,10 @@ class CommentRepository:
     async def create(self, data: dict):
         try:
             comment = Comment(**data)
-
             self.db.add(comment)
 
             await self.db.flush()
             await self.db.refresh(comment)
-
-            logger.info("Created comment id=%s", comment.id)
 
             return comment
 
@@ -86,13 +83,11 @@ class CommentRepository:
                 return None
 
             for key, value in data.items():
-                if hasattr(comment, key) and value is not None:
+                if value is not None and hasattr(comment, key):
                     setattr(comment, key, value)
 
             await self.db.flush()
             await self.db.refresh(comment)
-
-            logger.info("Updated comment id=%s", comment_id)
 
             return comment
 
@@ -108,8 +103,6 @@ class CommentRepository:
                 return False
 
             await self.db.delete(comment)
-
-            logger.info("Deleted comment id=%s", comment_id)
 
             return True
 

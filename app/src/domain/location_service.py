@@ -24,8 +24,8 @@ class LocationService:
 
         return location
 
-    async def create_location(self, data: dict, current_user):
-        if not data["name"] or len(data["name"].strip()) == 0:
+    async def create_location(self, data: dict):
+        if not data.get("name") or not data["name"].strip():
             raise ValidationException("Location name cannot be empty")
 
         return await self.repo.create(data)
@@ -34,7 +34,8 @@ class LocationService:
         if not current_user.is_superuser:
             raise ConflictException("Only superuser can update locations")
 
-        location = await self.repo.update(location_id, data)
+        clean_data = {k: v for k, v in data.items() if v is not None}
+        location = await self.repo.update(location_id, clean_data)
 
         if not location:
             raise NotFoundException("Location not found")

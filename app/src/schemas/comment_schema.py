@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -12,15 +13,27 @@ class CommentBaseSchema(BaseModel):
 
     @field_validator("text")
     @classmethod
-    def validate_text(cls, v):
-        if not v or len(v.strip()) == 0:
+    def validate_text(cls, v: str):
+        if not v or not v.strip():
             logger.error("Validation failed for comment text")
             raise ValueError("Comment text cannot be empty")
-        return v
+        return v.strip()
 
 
 class CommentCreateSchema(CommentBaseSchema):
     pass
+
+
+class CommentUpdateSchema(BaseModel):
+    text: Optional[str] = None
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, v):
+        if v is not None and not v.strip():
+            logger.error("Validation failed for comment text")
+            raise ValueError("Comment text cannot be empty")
+        return v
 
 
 class CommentResponseSchema(CommentBaseSchema):

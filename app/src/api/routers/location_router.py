@@ -9,6 +9,7 @@ from src.domain.auth_service import AuthService
 from src.domain.location_service import LocationService
 from src.schemas.location_schema import (
     LocationCreateSchema,
+    LocationUpdateSchema,
     LocationResponseSchema,
 )
 
@@ -31,22 +32,15 @@ async def get_location(location_id: int, db: AsyncSession = Depends(get_db)):
         handle_exception(ex)
 
 
-@router.post(
-    "/",
-    response_model=LocationResponseSchema,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/", response_model=LocationResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_location(
     data: LocationCreateSchema,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(AuthService.get_current_user),
 ):
     try:
         return await LocationService(db).create_location(
-            data.model_dump(),
-            current_user,
+            data.model_dump()
         )
-
     except Exception as ex:
         handle_exception(ex)
 
@@ -54,7 +48,7 @@ async def create_location(
 @router.put("/{location_id}", response_model=LocationResponseSchema)
 async def update_location(
     location_id: int,
-    data: LocationCreateSchema,
+    data: LocationUpdateSchema,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(AuthService.get_current_user),
 ):
@@ -64,7 +58,6 @@ async def update_location(
             data.model_dump(),
             current_user,
         )
-
     except Exception as ex:
         handle_exception(ex)
 
@@ -80,6 +73,5 @@ async def delete_location(
             location_id,
             current_user,
         )
-
     except Exception as ex:
         handle_exception(ex)

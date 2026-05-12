@@ -18,7 +18,6 @@ class PostService:
         self.repo = PostRepository(db)
         self.category_repo = CategoryRepository(db)
         self.location_repo = LocationRepository(db)
-        self.user_repo = UserRepository(db)
 
     async def get_posts(self):
         return await self.repo.get_all()
@@ -34,16 +33,14 @@ class PostService:
     async def create_post(self, data: dict, current_user):
         data["author_id"] = current_user.id
 
-        if data.get("category_id"):
-            if not await self.category_repo.get_by_id(data["category_id"]):
-                raise NotFoundException("Category not found")
-
-        if data.get("location_id"):
-            if not await self.location_repo.get_by_id(data["location_id"]):
-                raise NotFoundException("Location not found")
-
-        if not data["title"] or len(data["title"].strip()) < 3:
+        if not data.get("title") or len(data["title"].strip()) < 3:
             raise ValidationException("Title must be at least 3 characters")
+
+        if data.get("category_id") and not await self.category_repo.get_by_id(data["category_id"]):
+            raise NotFoundException("Category not found")
+
+        if data.get("location_id") and not await self.location_repo.get_by_id(data["location_id"]):
+            raise NotFoundException("Location not found")
 
         return await self.repo.create(data)
 
@@ -55,6 +52,14 @@ class PostService:
 
         if post.author_id != current_user.id and not current_user.is_superuser:
             raise ConflictException("No permission to update this post")
+
+        if "category_id" in data and data["category_id"]:
+            if not await self.category_repo.get_by_id(data["category_id"]):
+                raise NotFoundException("Category not found")
+
+        if "location_id" in data and data["location_id"]:
+            if not await self.location_repo.get_by_id(data["location_id"]):
+                raise NotFoundException("Location not found")
 
         return await self.repo.update(post_id, data)
 

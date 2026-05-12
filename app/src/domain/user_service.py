@@ -6,7 +6,7 @@ from src.repositories.comment_repository import CommentRepository
 from src.core.exceptions.exceptions import (
     NotFoundException,
     ConflictException,
-    ValidationException
+    ValidationException,
 )
 from src.resources.auth import get_password_hash
 
@@ -23,18 +23,14 @@ class UserService:
 
     async def get_user(self, user_id: int):
         user = await self.repo.get_by_id(user_id)
-
         if not user:
-            raise NotFoundException("User not found", {"user_id": user_id})
-
+            raise NotFoundException("User not found")
         return user
 
     async def get_user_by_login(self, login: str):
         user = await self.repo.get_by_username(login)
-
         if not user:
-            raise NotFoundException("User not found", {"login": login})
-
+            raise NotFoundException("User not found")
         return user
 
     async def create_user(self, data: dict):
@@ -44,9 +40,6 @@ class UserService:
         if await self.repo.get_by_email(data["email"]):
             raise ConflictException("Email already exists")
 
-        if len(data["username"].strip()) < 3:
-            raise ValidationException("Username too short")
-        
         password = data["password"]
 
         if hasattr(password, "get_secret_value"):
@@ -61,12 +54,11 @@ class UserService:
 
     async def update_user(self, user_id: int, data: dict, current_user):
         user = await self.repo.get_by_id(user_id)
-
         if not user:
             raise NotFoundException("User not found")
 
         if user.id != current_user.id and not current_user.is_superuser:
-            raise ConflictException("No permission to update this user")
+            raise ConflictException("No permission")
 
         if "username" in data:
             existing = await self.repo.get_by_username(data["username"])
@@ -78,15 +70,10 @@ class UserService:
             if existing and existing.id != user_id:
                 raise ConflictException("Email already exists")
 
-        if "password" in data:
+        if "password" in data and data["password"] is not None:
             password = data["password"]
-
-            if hasattr(password, "get_secret_value"):
-                password = password.get_secret_value()
-
             if len(password) < 6:
                 raise ValidationException("Password too short")
-
             data["password"] = get_password_hash(password)
 
         return await self.repo.update(user_id, data)
@@ -98,14 +85,14 @@ class UserService:
             raise NotFoundException("User not found")
 
         if user.id != current_user.id and not current_user.is_superuser:
-            raise ConflictException("No permission to delete this user")
+            raise ConflictException("No permission")
 
         comments = await self.comment_repo.get_by_author(user.id)
-        for comment in comments:
-            await self.comment_repo.delete(comment.id)
+        for c in comments:
+            await self.comment_repo.delete(c.id)
 
         posts = await self.post_repo.get_by_author(user.id)
-        for post in posts:
-            await self.post_repo.delete(post.id)
+        for p in posts:
+            await self.post_repo.delete(p.id)
 
         return await self.repo.delete(user_id)

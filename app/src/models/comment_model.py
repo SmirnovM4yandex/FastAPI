@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Text, DateTime, ForeignKey, func
 
 from src.database import Base
 from src.core.settings import settings
@@ -13,20 +13,26 @@ class Comment(Base):
         Integer,
         ForeignKey(
             f"{settings.POSTGRES_SCHEMA}.blog_post.id",
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
-        nullable=False
+        nullable=False,
+        index=True,
     )
 
     author_id = Column(
         Integer,
         ForeignKey(
             f"{settings.POSTGRES_SCHEMA}.auth_user.id",
-            ondelete="CASCADE"
+            ondelete="CASCADE",
         ),
-        nullable=False
+        nullable=False,
+        index=True,
     )
 
     text = Column(Text, nullable=False)
 
-    created_at = Column(DateTime, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )

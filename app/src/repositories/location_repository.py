@@ -46,8 +46,6 @@ class LocationRepository:
             await self.db.flush()
             await self.db.refresh(location)
 
-            logger.info("Created location id=%s", location.id)
-
             return location
 
         except SQLAlchemyError as ex:
@@ -62,13 +60,11 @@ class LocationRepository:
                 return None
 
             for key, value in data.items():
-                if hasattr(location, key) and value is not None:
+                if value is not None and hasattr(location, key):
                     setattr(location, key, value)
 
             await self.db.flush()
             await self.db.refresh(location)
-
-            logger.info("Updated location id=%s", location_id)
 
             return location
 
@@ -84,8 +80,6 @@ class LocationRepository:
                 return False
 
             await self.db.delete(location)
-
-            logger.info("Deleted location id=%s", location_id)
 
             return True
 

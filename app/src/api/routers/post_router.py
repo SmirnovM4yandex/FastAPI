@@ -10,6 +10,7 @@ from src.domain.post_service import PostService
 from src.schemas.post_schema import (
     PostCreateSchema,
     PostResponseSchema,
+    PostUpdateSchema
 )
 
 router = APIRouter(prefix="/posts", tags=["Posts"])
@@ -54,7 +55,7 @@ async def create_post(
 @router.put("/{post_id}", response_model=PostResponseSchema)
 async def update_post(
     post_id: int,
-    data: PostCreateSchema,
+    data: PostUpdateSchema,
     db: AsyncSession = Depends(get_db),
     current_user=Depends(AuthService.get_current_user),
 ):

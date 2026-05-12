@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from src.models.category_model import Category
 from src.repositories.category_repository import CategoryRepository
@@ -13,7 +12,6 @@ from src.core.exceptions.exceptions import (
 class CategoryService:
 
     def __init__(self, db: AsyncSession):
-        self.db = db
         self.repo = CategoryRepository(db)
 
     async def get_categories(self):
@@ -27,15 +25,15 @@ class CategoryService:
 
         return category
 
-    async def create_category(self, data: dict, current_user):
-        if not data["slug"] or len(data["slug"].strip()) == 0:
+    async def create_category(self, data: dict):
+        slug = data.get("slug")
+
+        if not slug or not slug.strip():
             raise ValidationException("Slug cannot be empty")
 
-        existing = await self.db.execute(
-            select(Category).where(Category.slug == data["slug"])
-        )
+        existing = await self.repo.get_by_slug(slug)
 
-        if existing.scalar_one_or_none():
+        if existing:
             raise ConflictException("Category slug must be unique")
 
         return await self.repo.create(data)
@@ -44,6 +42,12 @@ class CategoryService:
         if not current_user.is_superuser:
             raise ConflictException("Only superuser can update categories")
 
+        if "slug" in data:
+            existing = await self.repo.get_by_slug(data["slug"])
+
+            if existing and existing.id != category_id:
+                raise ConflictException("Category slug must be unique")
+    
         category = await self.repo.update(category_id, data)
 
         if not category:

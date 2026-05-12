@@ -38,21 +38,23 @@ class PostRepository:
             raise DatabaseException(str(ex))
 
     async def get_by_author(self, author_id: int):
-        result = await self.db.execute(
-            select(Post).where(Post.author_id == author_id)
-        )
-        return result.scalars().all()
+        try:
+            result = await self.db.execute(
+                select(Post).where(Post.author_id == author_id)
+            )
+            return result.scalars().all()
+
+        except SQLAlchemyError as ex:
+            logger.error("Failed to fetch posts by author=%s: %s", author_id, ex)
+            raise DatabaseException(str(ex))
 
     async def create(self, data: dict):
         try:
             post = Post(**data)
-
             self.db.add(post)
 
             await self.db.flush()
             await self.db.refresh(post)
-
-            logger.info("Created post id=%s", post.id)
 
             return post
 
@@ -74,8 +76,6 @@ class PostRepository:
             await self.db.flush()
             await self.db.refresh(post)
 
-            logger.info("Updated post id=%s", post_id)
-
             return post
 
         except SQLAlchemyError as ex:
@@ -90,8 +90,6 @@ class PostRepository:
                 return False
 
             await self.db.delete(post)
-
-            logger.info("Deleted post id=%s", post_id)
 
             return True
 
