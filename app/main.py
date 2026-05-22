@@ -3,8 +3,14 @@ import asyncio
 import uvicorn
 
 from src.app import create_app
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+
+
+BASE_DIR = Path("/app")
 
 app = create_app()
+app.mount("/media", StaticFiles(directory=str(BASE_DIR / "media")), name="media")
 
 
 async def run() -> None:

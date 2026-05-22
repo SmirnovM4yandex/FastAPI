@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.models.post_model import Post
 from src.core.exceptions.exceptions import DatabaseException
@@ -18,9 +19,18 @@ class PostRepository:
     async def get_all(self):
         try:
             result = await self.db.execute(
-                select(Post).order_by(Post.id)
+                select(Post)
+                .options(selectinload(Post.reactions))
+                .order_by(Post.id)
             )
-            return result.scalars().all()
+
+            posts = result.scalars().all()
+
+            for post in posts:
+                post.likes = len([r for r in post.reactions if r.value == 1])
+                post.dislikes = len([r for r in post.reactions if r.value == -1])
+
+            return posts
 
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch posts: %s", ex)
@@ -29,9 +39,18 @@ class PostRepository:
     async def get_by_id(self, post_id: int):
         try:
             result = await self.db.execute(
-                select(Post).where(Post.id == post_id)
+                select(Post)
+                .options(selectinload(Post.reactions))
+                .where(Post.id == post_id)
             )
-            return result.scalar_one_or_none()
+
+            post = result.scalar_one_or_none()
+
+            if post:
+                post.likes = len([r for r in post.reactions if r.value == 1])
+                post.dislikes = len([r for r in post.reactions if r.value == -1])
+
+            return post
 
         except SQLAlchemyError as ex:
             logger.error("Failed to fetch post id=%s: %s", post_id, ex)

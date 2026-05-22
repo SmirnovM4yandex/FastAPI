@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.post_repository import PostRepository
 from src.repositories.category_repository import CategoryRepository
 from src.repositories.location_repository import LocationRepository
-from src.repositories.user_repository import UserRepository
+from src.repositories.post_reaction_repository import PostReactionRepository
 
 from src.core.exceptions.exceptions import (
     NotFoundException,
@@ -18,6 +18,7 @@ class PostService:
         self.repo = PostRepository(db)
         self.category_repo = CategoryRepository(db)
         self.location_repo = LocationRepository(db)
+        self.reaction_repo = PostReactionRepository(db)
 
     async def get_posts(self):
         return await self.repo.get_all()
@@ -73,3 +74,41 @@ class PostService:
             raise ConflictException("No permission to delete this post")
 
         return await self.repo.delete(post_id)
+
+    async def react_to_post(
+        self,
+        post_id: int,
+        value: int,
+        current_user
+    ):
+        post = await self.repo.get_by_id(post_id)
+
+        if not post:
+            raise NotFoundException("Post not found")
+
+        if value not in [1, -1]:
+            raise ValidationException("Invalid reaction")
+
+        existing = await self.reaction_repo.get_user_reaction(
+            post_id,
+            current_user.id
+        )
+
+        if existing:
+            if existing.value == value:
+                await self.reaction_repo.delete(existing)
+
+            else:
+                existing.value = value
+                await self.reaction_repo.update(existing)  # ВАЖНО
+
+        else:
+            await self.reaction_repo.create(
+                post_id,
+                current_user.id,
+                value
+            )
+
+        await self.reaction_repo.db.commit()
+
+        return await self.repo.get_by_id(post_id)

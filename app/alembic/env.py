@@ -10,6 +10,7 @@ from src.models.comment_model import Comment
 from src.models.location_model import Location
 from src.models.post_model import Post
 from src.models.user_model import User
+from src.models.post_reaction_model import PostReaction
 from src.core.settings import settings
 
 config = context.config

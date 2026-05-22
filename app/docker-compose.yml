@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:17-alpine
@@ -27,7 +25,6 @@ services:
     container_name: blog_app
     volumes:
       - ./src:/app/src
-      - ./images:/images
       - ./media:/app/media
       - ./alembic:/app/alembic
     env_file:

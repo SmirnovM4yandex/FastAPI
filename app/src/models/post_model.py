@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 
 from src.database import Base
+from sqlalchemy.orm import relationship
 from src.core.settings import settings
 
 
@@ -49,3 +50,7 @@ class Post(Base):
     is_published = Column(Boolean, nullable=False, default=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    reactions = relationship(
+        "PostReaction",
+        cascade="all, delete-orphan"
+    )

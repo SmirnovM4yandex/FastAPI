@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 import logging
+from pydantic import computed_field
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -76,3 +77,5 @@ class PostResponseSchema(PostBaseSchema):
     author_id: int
     pub_date: Optional[datetime]
     created_at: datetime
+    likes: int = 0
+    dislikes: int = 0
